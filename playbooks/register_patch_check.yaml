@@ -1,0 +1,26 @@
+- name: Check Memory Usage and Warn if Low
+  hosts: qa
+  become: yes
+  tasks:
+    - name: Get memory status
+      command: free -m
+      register: mem_status
+
+    - name: Show memory output
+      debug:
+        msg: "{{ mem_status.stdout_lines }}"
+
+    - name: Extract available memory in MB
+      shell: free -m | awk '/Mem:/ { print $7 }'
+      register: available_mem
+      changed_when: false
+
+    - name: Print available memory
+      debug:
+        msg: "Available memory: {{ available_mem.stdout }} MB"
+
+    - name: Warn if memory is low
+      debug:
+        msg: "⚠️ WARNING: Low Memory! Only {{ available_mem.stdout }} MB available."
+      when: available_mem.stdout|int < 500
+

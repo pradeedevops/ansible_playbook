@@ -1,0 +1,24 @@
+---
+- name: Run DB backup asynchronously
+  hosts: qa
+  become: true
+
+  tasks:
+    - name: Start DB dump (fake command)
+      shell: "sleep 30 && echo 'backup complete' > /tmp/db_backup.txt"
+      async: 60
+      poll: 0
+      register: db_job
+
+    - name: Wait for backup to finish
+      async_status:
+        jid: "{{ db_job.ansible_job_id }}"
+      register: backup_status
+      until: backup_status.finished
+      retries: 5
+      delay: 10
+
+    - name: Show DB backup result
+      debug:
+        var: backup_status
+

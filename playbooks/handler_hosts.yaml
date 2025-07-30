@@ -1,0 +1,31 @@
+---
+- name: Add /etc/hosts entry and restart NGINX if config changes
+  hosts: qa
+  become: yes
+
+  tasks:
+    - name: Install NGINX if not present
+      apt:
+        name: nginx
+        state: present
+      when: ansible_os_family == "Debian"
+
+    - name: Add internal repo entry to /etc/hosts
+      lineinfile:
+        path: /etc/hosts
+        line: "10.10.10.10 internal.repo"
+        state: present
+      notify: Restart NGINX
+
+    - name: Deploy NGINX config
+      template:
+        src: ../templates/nginx.conf
+        dest: /etc/nginx/nginx.conf
+      notify: Restart NGINX
+
+  handlers:
+    - name: Restart NGINX
+      service:
+        name: nginx
+        state: restarted
+

@@ -1,0 +1,23 @@
+---
+- name: Download artifact once and distribute
+  hosts: qa
+  become: yes
+  vars:
+    artifact_path: "/tmp/app.war"
+
+  tasks:
+    - name: Ensure mock WAR file exists (on localhost)
+      delegate_to: localhost
+      run_once: true
+      copy:
+        content: "Dummy WAR content for testing"
+        dest: "{{ artifact_path }}"
+
+    - name: Copy WAR file to all QA nodes
+      copy:
+        src: "{{ artifact_path }}"
+        dest: "/opt/app.war"
+        owner: root
+        group: root
+        mode: '0644'
+
